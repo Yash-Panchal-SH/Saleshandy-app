@@ -50,7 +50,14 @@
 
 ## Theming
 - All tokens exposed as CSS custom properties on `:root` and `[data-theme="dark"]`
-- Tailwind config maps to CSS variables (runtime theme switching without rebuild)
+- Tailwind v4 maps to CSS variables (runtime theme switching without rebuild)
+- shadcn/ui token names are extended, not overwritten
+
+## Animation
+- Tailwind transitions for hover / focus / state changes
+- Framer Motion only for complex animations (layout transitions, drag-drop, page transitions)
+- No CSS-in-JS runtime libs (styled-components, Emotion)
+- `prefers-reduced-motion` honored everywhere (see Motion above)
 
 ## Documentation
 - Storybook with token reference page

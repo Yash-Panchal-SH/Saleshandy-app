@@ -39,3 +39,12 @@
 ## CI
 - `tsc --noEmit` gate on every PR
 - API codegen step gates on contract drift
+
+## Code rules
+- No `any` — use `unknown` and narrow. Lint rule: `@typescript-eslint/no-explicit-any` = error
+- No `useEffect` for data fetching — use TanStack Query
+- No barrel exports (`index.ts` re-exports kill tree-shaking)
+- Absolute imports only (`@/features/...`); no `../../../` relatives
+- No inline styles — Tailwind only
+- No CSS-in-JS runtime (styled-components / Emotion); Tailwind v4 is the only styling layer
+- Every `eslint-disable` comment must include a justification

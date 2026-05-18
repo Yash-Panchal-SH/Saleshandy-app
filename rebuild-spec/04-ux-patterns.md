@@ -17,7 +17,7 @@
 - Inline validation, error messages below field
 - Autosave for long forms (with toast confirmation)
 - Wizard pattern for onboarding and multi-step setup
-- Inline-edit for table cells
+- Inline-edit primitive for table cells (built in Organisms — missing today)
 
 ## Data display
 - One canonical table component (sort, filter, column reorder, column visibility, density, virtualized)

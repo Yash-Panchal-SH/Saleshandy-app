@@ -1,57 +1,59 @@
 # Components
 
+Built on **shadcn/ui** (copy-paste, Radix primitives, we own the code). Custom-built only where shadcn doesn't cover — product-specific things like score widgets, credit indicator, dialer PIP, brand illustrations, and composed domain widgets. Tags below: `[shadcn]` = shipped by shadcn/ui · `[custom-on-radix]` = built on a Radix primitive shadcn doesn't ship · `[custom]` = built from scratch.
+
 ## Primitives
-- Button
-- Icon Button
-- Checkbox
-- Radio
-- Switch / Toggle
-- Input (text)
-- Input number
-- Textarea
-- Select (single + multi)
-- Combobox / Searchable select
-- Date picker
-- Date range picker
-- Phone number input + country code picker
-- Slider
-- Avatar
-- Badge
-- Tag / Chip
-- Link
-- Divider
+- Button `[shadcn]`
+- Icon Button `[shadcn]` (Button variant)
+- Checkbox `[shadcn]`
+- Radio `[shadcn]` (RadioGroup)
+- Switch / Toggle `[shadcn]`
+- Input (text) `[shadcn]`
+- Input number `[custom]`
+- Textarea `[shadcn]`
+- Select (single + multi) `[shadcn]` (multi = custom-on-shadcn)
+- Combobox / Searchable select `[shadcn]` (Command-based)
+- Date picker `[shadcn]` (Calendar + Popover)
+- Date range picker `[shadcn]`
+- Phone number input + country code picker `[custom]`
+- Slider `[shadcn]`
+- Avatar `[shadcn]`
+- Badge `[shadcn]`
+- Tag / Chip `[custom]`
+- Link `[custom]`
+- Divider `[shadcn]` (Separator)
 
 ## Layout
-- Container
-- Grid
-- Stack (vertical + horizontal)
-- Card
-- Page header
-- Section heading
-- Sidebar
-- Topbar
-- Split pane
-- Sticky / scroll container
+- Container `[custom]`
+- Grid `[custom]`
+- Stack (vertical + horizontal) `[custom]`
+- Card `[shadcn]`
+- Page header `[custom]`
+- Section heading `[custom]`
+- Sidebar `[custom]`
+- Topbar `[custom]`
+- Split pane `[custom]`
+- Sticky / scroll container `[custom]`
 
 ## Navigation
-- Tab group
-- Horizontal menu / pill nav
-- Breadcrumbs
-- Stepper / wizard
-- Command palette
-- Dropdown menu
-- Context menu
+- Tab group `[shadcn]`
+- Horizontal menu / pill nav `[custom]`
+- Breadcrumbs `[shadcn]`
+- Stepper / wizard `[custom]`
+- Command palette `[shadcn]` (Command + Dialog)
+- Dropdown menu `[shadcn]`
+- Context menu `[shadcn]`
 
 ## Overlay
-- Modal
-- Drawer (left / right / bottom)
-- Popover
-- Tooltip
-- Confirmation dialog (single, unified version — not v1/v2/v3)
-- Sheet
+- Modal `[shadcn]` (Dialog)
+- Drawer (left / right / bottom) `[shadcn]` (Sheet)
+- Popover `[shadcn]`
+- Tooltip `[shadcn]`
+- Confirmation dialog (single, unified version — not v1/v2/v3) `[shadcn]` (AlertDialog)
+- Sheet `[shadcn]`
 
 ## Form-level
-- Form provider (RHF + Zod or equivalent)
+- Form provider (RHF + Zod — no Formik in new code)
 - Form field wrapper (label + input + error + helper)
 - Field array
 - Multi-chip input
@@ -79,12 +81,12 @@
 - Bulk action bar
 
 ## Feedback
-- Toast (single canonical system)
+- Toast (single canonical system — shadcn Sonner)
 - Notification banner (info / warning / success / error)
-- Alert
+- Alert `[shadcn]`
 - Spinner
-- Skeleton loader
-- Progress bar (linear)
+- Skeleton loader `[shadcn]`
+- Progress bar (linear) `[shadcn]`
 - Circular progress
 - Loading bar (top-of-page)
 - Error boundary fallback
@@ -94,7 +96,7 @@
 - Route guard wrappers (auth, protected, config)
 - Lazy-load + retry wrapper
 
-## Domain-specific
+## Domain-specific (all `[custom]`)
 - Credit / quota indicator
 - Reward credits badge
 - Upgrade plan banner

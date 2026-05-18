@@ -135,6 +135,7 @@ Rename existing 12 (drop `Web -` prefix), create 10 new.
 | `11-assets.md` | App-Shared (image/font/SVG pipeline) | Atoms (icon registry) |
 | `12-state.md` | App-Shared (TanStack Query + Zustand baseline) | every feature project (per-feature slice migration) |
 | `13-type-safety.md` | App-Shared (tsconfig + codegen + Zod) | every feature project (per-feature schemas) |
+| `14-frontend-principles.md` | every UI project | App-Shared (CI gates: Web Vitals, bundle size) |
 
 `REBUILD_INVENTORY.md` → linked in every Project description as "source of truth".
 
@@ -143,6 +144,8 @@ Rename existing 12 (drop `Web -` prefix), create 10 new.
 ## Per-Project Descriptions & Issue Lists
 
 > Each block below is the **proposed content of the Linear Project description**. Issue lists are checklist-style for now — we will iterate to extract them into real Linear Issues later with acceptance criteria.
+>
+> **Rebuild stance: greenfield.** Where issues mention `port`, `migrate slice`, `replace X`, or reference a legacy file path (`src/components/...`, `src/store/...`), treat those as **behavior references only**. The new app is built from scratch on Vite 6 + React 19 + Tailwind v4 + shadcn/ui + TanStack Router + TanStack Query + Zustand + RHF/Zod. No incremental migration of the legacy codebase; legacy paths exist only so engineers can read the existing UX before re-implementing it.
 
 ---
 
@@ -154,48 +157,48 @@ Rename existing 12 (drop `Web -` prefix), create 10 new.
 **Issue checklist:**
 
 Build, language, lint:
-- Migrate CRA (react-scripts 4.0.3) → **Vite** (or Next.js if SSR is in scope)
-- Upgrade React 16.13 → **React 19** (ReactDOM, types, StrictMode)
-- TypeScript strict promotion: enable `strictNullChecks`, `noImplicitAny`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noFallthroughCasesInSwitch`, `noImplicitOverride`; set `target: ES2022`, `moduleResolution: bundler`
-- ESLint flat config — typescript-eslint, react, **jsx-a11y**, import
-- Prettier (singleQuote, trailingComma=all, 2-space) — preserve
-- Stylelint for remaining CSS/SCSS
-- Husky pre-commit: lint-staged + typecheck + pretty-quick
-- `@typescript-eslint/no-explicit-any` = error
+- **Greenfield scaffold on Vite 6** (SPA only — no SSR, no Next.js)
+- **React 19** (ReactDOM, types, StrictMode)
+- TypeScript strict mode: `strict`, `strictNullChecks`, `noImplicitAny`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noFallthroughCasesInSwitch`, `noImplicitOverride`; `target: ES2022`, `moduleResolution: bundler`
+- **Lint/format: decide Biome vs ESLint flat config + Prettier in this scaffolding ticket** — both acceptable per principles
+- If ESLint: typescript-eslint, react, **jsx-a11y**, import
+- If Biome: reconcile a11y rule set against `eslint-plugin-jsx-a11y` (Biome covers a subset)
+- Husky pre-commit: lint-staged + typecheck
+- `@typescript-eslint/no-explicit-any` = error (or Biome equivalent)
 - Secret-scanning lint rule for `*_SECRET` / `*_PRIVATE_KEY` / leaked tokens
+- Tailwind CSS v4 (CSS-first config, zero runtime); shadcn/ui copy-paste at `shared/components/ui/`
 
 Routing:
-- Migrate **React Router v5 → TanStack Router** (file-based, typed routes)
+- **TanStack Router** (file-based, typed routes)
 - Route-level code splitting on every screen
-- Auth/Protected/Config route guards rebuilt on TanStack Router middleware (`src/shared/components/{auth-route,protected-route,config-route}.tsx`)
+- Auth/Protected/Config route guards built on TanStack Router middleware
 - URL search-param state typed via **Zod** schemas
-- Plan migration of the monolithic `Home` hub's 30+ eagerly-imported nested routes (`src/components/home/home.tsx`)
+- No monolithic hub route — each feature owns its own route tree
 
 Server state:
 - **TanStack Query** baseline (provider, devtools, default options)
-- One `createApi`-equivalent per feature module — define convention
-- Migrate **726 `createAsyncThunk` calls** → query/mutation (per-feature owned, App-Shared lays groundwork)
-- Tag-based cache invalidation convention
+- One query-key namespace per feature; co-locate hooks in feature folder
+- Tag-based cache invalidation via `queryClient.invalidateQueries({ queryKey: [...] })`
 - Optimistic update helper + rollback pattern
 - WebSocket / polling helpers (for inbox + dialer)
-- Cross-feature side-effect helper `invalidateTags([...])`
+- Stale-time conventions per data type (see `rebuild-spec/12-state.md`)
 
 Client / UI state:
-- **Zustand** baseline (devtools, persist helper)
-- Migration plan: 55 Redux slices → Zustand (UI flags only) + TanStack Query (server-owned data)
-- Decision matrix: when to use Zustand vs Context (>3 levels of prop drilling)
-- Decommission `redux-toolkit` once last slice migrated (long-tail)
+- **Zustand** baseline (devtools, persist helper) for truly global client state (theme, sidebar open/close)
+- `useState` for component-local state
+- Passing props 2–3 levels deep is fine; reach for Context only when prop-drilling pain is real and the value is widely consumed (theme, auth, feature flags)
+- **No Redux in the rebuild** (greenfield)
 
 HTTP / auth:
 - Fetch wrapper (or Axios 1.x) with interceptors, retry policy, AbortController, response unwrap
 - Bearer token injection
-- **Auth: HttpOnly + Secure + SameSite=Lax cookies** (replace sessionStorage Bearer tokens at `src/api.ts:22–30`, `src/shared/utils/token.ts`)
+- **Auth: HttpOnly + Secure + SameSite=Lax cookies**
 - Refresh token rotation + short-lived access tokens
 - Single source of truth for `isAuthenticated`
-- Open-redirect safe-list for all `returnUrl` (`src/shared/utils/auth-helper.ts`)
+- Open-redirect safe-list for all `returnUrl`
 
-Provider tree (root, in order — replaces `src/root.tsx:21–37`):
-1. Error boundary, 2. Redux Provider (legacy, removable later), 3. TanStack Query Provider, 4. Theme provider, 5. Router, 6. Auth provider, 7. Feature-flag provider, 8. Toast provider, 9. Modal/overlay portal root, 10. i18n provider, 11. App
+Provider tree (root, in order):
+1. Error boundary, 2. TanStack Query Provider, 3. Theme provider, 4. Router, 5. Auth provider, 6. Feature-flag provider, 7. Toast provider, 8. Modal/overlay portal root, 9. i18n provider, 10. App
 
 Third-party:
 - Sentry — errors + perf + replay (`src/index.tsx:43–67` — kept), add **source-map upload** in CI (`@sentry/cli` or `@sentry/vite-plugin`)
@@ -232,7 +235,8 @@ Observability infra (spec §08):
 - `PerformanceObserver` for long-tasks (>50ms)
 - React Profiler (dev + prod-sampled)
 - Bundle analyzer (`rollup-plugin-visualizer`) + per-PR size diff
-- **Lighthouse CI** per PR (perf / a11y / best-practices / SEO)
+- **Bundle-size gate** (size-limit or bundlesize): fail PR if initial bundle > **150KB gzipped**
+- **Lighthouse CI** per PR with hard numeric gates: **LCP <2.0s, INP <150ms, CLS <0.05, FCP <1.2s** — fail PR on regression of any core vital
 - Structured client logger (pino-style), no raw `console.log` in shipped code
 - Heartbeat ping + API status endpoint poll (for maintenance-mode UI)
 
@@ -272,8 +276,9 @@ a11y infra (spec §09 — per-component work belongs in Atoms/Molecules/Organism
 - Storybook a11y addon (Atoms project owns Storybook setup)
 
 CI / CD:
-- Consolidate 5 GitHub Actions workflows + GitLab CI into one pipeline
+- GitHub Actions pipeline (new — greenfield, no legacy workflows to consolidate)
 - Stages: install → typecheck → lint → unit test → build → e2e (Playwright) → bundle size gate → Lighthouse → deploy
+- Bundle-size + Lighthouse gates per numeric targets above (also in `07-global-setup.md` and `14-frontend-principles.md`)
 - Source map upload to Sentry per build
 - Preview deploys per PR
 - Asset budget gates
@@ -311,94 +316,69 @@ Docs (spec §06):
 ---
 
 ### 2 · Atoms
-*Design tokens + ~115 primitive components. Foundation for Molecules + Organisms + every UI project.*
+*Design tokens + shadcn/ui base + product-specific custom primitives. Foundation for Molecules + Organisms + every UI project.*
 
-**Sources:** spec §02 (Primitives / Layout / Feedback / Navigation primitives), §03 (entire file), §09 (per-component a11y) · inventory §2, §4.
+**Sources:** spec §02 (Primitives / Layout / Feedback / Navigation primitives), §03 (entire file), §09 (per-component a11y), §14 (principles + anti-patterns) · inventory §2, §4.
 
 **Issue checklist:**
 
 **Issue #1 — Design tokens (gating)**:
-- Color tokens: primary/secondary/danger/success/warning/info/neutral × 10–12 step scales (50–950); semantic mapping (primary=blue-6, danger=red-6, etc.) — port from `_custom-variable.scss:21–708`
+- Color tokens: primary/secondary/danger/success/warning/info/neutral × 10–12 step scales (50–950); semantic mapping (primary=blue-6, danger=red-6, etc.) — defined from scratch using principles' token scale
 - Surface tokens: background, foreground, muted, border, ring, popover, card
-- **Dark mode** via CSS custom properties on `:root` + `[data-theme="dark"]` (`prefers-color-scheme` + manual override) — currently only `.sh-dark-mode` stub class exists
+- **Dark mode** via CSS custom properties on `:root` + `[data-theme="dark"]` (`prefers-color-scheme` + manual override)
 - Contrast-verified pairs documented per pair (WCAG 2.2 AA, 4.5:1 body / 3:1 large)
-- Typography: Inter primary, mono for code/IDs; weights 400/500/600/700; type scale xs/sm/base/lg/xl/2xl/3xl/4xl with paired line-heights; h1–h4 mapped; utilities body/caption/label/overline (consolidate `.regular-*`, `.semibold-*`, `.font-*` raw classes)
-- Spacing: unified 4px-base scale 0/1/2/3/4/5/6/8/10/12/16/20/24/32 — replace 17 ad-hoc media-query vars + `$mr-*` + `.gap-*` + BEM utilities
+- Typography: Inter primary, mono for code/IDs; weights 400/500/600/700; type scale xs/sm/base/lg/xl/2xl/3xl/4xl with paired line-heights; h1–h4 mapped; utilities body/caption/label/overline
+- Spacing: unified 4px-base scale 0/1/2/3/4/5/6/8/10/12/16/20/24/32
 - Sizing: width/height tokens (sm/md/lg/xl/full/screen); container max-widths per breakpoint
 - Radius: none/sm(2)/md(4)/lg(8)/xl(12)/2xl(16)/full
 - Shadow/elevation: xs/sm/md/lg/xl/2xl + popover/dropdown/modal-specific + focus ring
-- Breakpoints: consolidated sm640/md768/lg1024/xl1280/2xl1536 — replace 17-value list
-- **Z-index scale**: base/dropdown/sticky/fixed/modal-backdrop/modal/popover/tooltip/toast (numbered) — replace scattered ad-hoc values
+- Breakpoints: consolidated sm640/md768/lg1024/xl1280/2xl1536
+- **Z-index scale**: base/dropdown/sticky/fixed/modal-backdrop/modal/popover/tooltip/toast (numbered)
 - **Motion**: duration tokens instant/fast(150)/base(200)/slow(300)/slower(500) + easing linear/in/out/in-out/spring + `prefers-reduced-motion` everywhere
-- Tailwind config maps to CSS variables (runtime theme switching, no rebuild)
+- **Tailwind v4 CSS-first config** mapped to CSS variables (runtime theme switching, no rebuild); shadcn/ui token names extended, not overwritten
+
+**Issue #2 — shadcn/ui setup (gates Issues #3+)**:
+- Install shadcn/ui CLI; copy core primitives into `shared/components/ui/`: Button, Input, Textarea, Select, Checkbox, RadioGroup, Switch, Dialog, AlertDialog, Popover, Tooltip, Tabs, DropdownMenu, ContextMenu, Command, Sheet, Sonner (toast), Skeleton, Card, Avatar, Badge, Breadcrumb, Progress, Separator, Slider, Calendar, Accordion
+- Wire to design tokens from Issue #1
+- Dark-mode parity verified for every shadcn component
+- Storybook story per component
+- jest-axe smoke test per component
 
 Storybook & docs:
-- Storybook setup (replace Styleguidist `styleguide.config.js`)
+- Storybook setup (greenfield)
 - Token reference page + auto contrast matrix
 - Component API docs (props, variants, slots, a11y notes)
 - Visual regression (Chromatic or Loki)
 
 Icon system:
-- Pick single icon library (Lucide or equivalent)
+- **Lucide React** (shadcn default)
 - Icon registry exported from one entry; tree-shaken imports
-- Brand / product illustrations as inline React SVG (keep current pattern)
+- Brand / product illustrations as inline React SVG
 - All icons `aria-hidden` or `aria-label`
-- Migrate `src/shared/svg/` 186 per-file SVGs → registry + sprite for repeats
+- Build SVG sprite for repeated marketing illustrations
 
-Form primitives:
-- Button (Theme/Variant/Size enums — port from `atoms/button/` with a11y + tests)
-- Icon Button
-- Checkbox (port indeterminate support from `atoms/checkbox.tsx`)
-- Radio
-- Switch / Toggle (port `atoms/switch.tsx`)
-- Input (text) — simplify the current 15-prop API (`components/input/`)
-- Input number (`components/input-number/`)
-- Textarea
-- Select single + multi — simplify the current 20-prop API (`components/select/` Ant Design wrapper)
-- Combobox / searchable select
-- Date picker
+Primitives covered by shadcn/ui (Issue #2 — no separate issues needed):
+- Button, Icon Button (Button variant), Checkbox, RadioGroup, Switch, Input, Textarea, Select (single), Avatar, Badge, Card, Tabs, Breadcrumb, Tooltip, Popover, DropdownMenu, ContextMenu, Dialog (modal), AlertDialog (confirmation), Sheet (drawer), Command (palette base), Skeleton, Progress (linear), Separator (divider), Slider, Calendar (date picker base), Accordion
+
+Custom-built primitives (each is its own issue):
+- Input number (numeric increments + stepper)
+- Select (multi) — composed on shadcn Select + Command
+- Date picker (Calendar + Popover composition; shadcn pattern but composed here)
 - Date range picker
 - Phone number input + country code picker
-- Slider
-- Password input (move detailed strength UI to Molecules)
-
-Display primitives:
-- Avatar (`atoms/avatar/`)
-- Badge (`atoms/badge/`)
+- Password input shell (strength UI lives in Molecules)
 - Tag / Chip
 - Link
-- Divider
-
-Layout primitives:
-- Container
-- Grid
-- Stack (vertical + horizontal)
-- Card
-- Page header (Redux-backed currently — migrate to props)
+- Container, Grid, Stack
+- Page header (props-driven, no global state)
 - Section heading
 - Split pane
 - Sticky / scroll container
-
-Overlay primitives (shells — composite logic lives in Organisms):
-- Modal shell (add `aria-modal` + focus trap + Escape closes)
-- Drawer (left / right / bottom) — currently **missing**, only modals exist
-- Popover (`atoms/overlay/popover/`)
-- Tooltip (`atoms/tooltip-wrapper/`)
-- Sheet
-
-Feedback primitives:
-- Spinner (`atoms/spinner/`)
-- Skeleton loader (`atoms/skeletons/`)
-- Progress bar (linear)
-- Circular progress (`atoms/circular-progressbar.tsx`)
-- Loading bar (top-of-page) — port `src/shared/loading-bar/`
-
-Navigation primitives:
-- Tab group (`atoms/tab/`)
-- Horizontal menu / pill nav (`atoms/horizontal-menu/`)
-- Breadcrumbs
-- Dropdown menu (`atoms/dropdown.tsx`)
-- Context menu
+- Horizontal menu / pill nav
+- Spinner (small inline-spinner, complements shadcn Skeleton)
+- Circular progress
+- Loading bar (top-of-page)
+- Carousel (auth testimonials)
 
 Per-component a11y pass (each primitive issue includes):
 - Native HTML element first
@@ -419,7 +399,7 @@ Testing:
 **Issue checklist:**
 
 Form composites:
-- Form provider — **react-hook-form + Zod** (replace Formik 2.2, ~100+ forms)
+- Form provider — **react-hook-form + Zod** (no Formik in new code)
 - Form field wrapper (label + input + error + helper, `aria-describedby` wiring)
 - Field array
 - Multi-chip input (port `multi-chip-input` with focus management)
@@ -466,8 +446,7 @@ Misc:
 
 Data display:
 - **Canonical data table** — TanStack Table v8 (sortable, filterable, column reorder via `@dnd-kit`, column visibility, density, **virtualized for >1k rows**, cursor pagination, infinite scroll variant)
-- Migrate `react-bootstrap-table-next` (do-not-contact, do-not-call) → canonical table
-- Migrate `rc-table` (legacy sequence/prospect) → canonical table
+- One canonical table replaces all legacy table libs (no migration — every consumer is built fresh against this one)
 - Pagination (cursor-based default + page-size selector)
 - Empty state (single canonical, illustration + CTA — collapse `no-result-empty-list/` + `molecules/empty-list/`)
 - **Kanban board** — `@dnd-kit` (replace internal drag-drop in `crm/kanban*`)
@@ -503,11 +482,10 @@ Navigation organisms:
 - Notification center (bell icon, list, mark-read) — feeds Inbox
 
 Editor:
-- Email template editor — **Tiptap** or similar (replace TinyMCE 5 `@tinymce/tinymce-react`)
+- Email template editor — **Tiptap** (greenfield; behavior reference: legacy TinyMCE templates)
 
 Drag-drop wrapper:
-- Draggable wrapper (port `draggable-wrapper/`, `@dnd-kit` based)
-- Audit `react-beautiful-dnd` — remove if unused
+- Draggable wrapper built on `@dnd-kit`
 
 Auth / routing organisms (consumed by Layout):
 - Carousel (auth testimonials, port `atoms/carousel/`)
@@ -595,7 +573,7 @@ Token / flow hardening:
 - Demo-account token handling (port `demo-account-handlers.ts`)
 
 Forms migration:
-- All Formik forms → react-hook-form + Zod schemas
+- All forms built on react-hook-form + Zod schemas (no Formik)
 - Field-level error messages from schema
 
 ---
@@ -623,8 +601,8 @@ Submodules (one issue per route):
 - Users & teams
 - Out of office
 - Webhook
-- Do not contact (table — migrate off `react-bootstrap-table-next`)
-- Do not call (table — migrate off `react-bootstrap-table-next`)
+- Do not contact (canonical TanStack Table v8)
+- Do not call (canonical TanStack Table v8)
 - Custom outcomes
 - Call outcomes
 - Whitelabel
@@ -634,8 +612,8 @@ Submodules (one issue per route):
 - Email daily sending limit (from slice list)
 
 Cross-cutting:
-- Migrate per-submodule Formik forms → react-hook-form + Zod
-- Migrate per-submodule async thunks → TanStack Query
+- Per-submodule forms built on react-hook-form + Zod
+- Per-submodule data flows built on TanStack Query (behavior reference: legacy slices)
 - a11y pass: form labels, error announcements, focus management
 
 ---
@@ -653,7 +631,7 @@ Cross-cutting:
 - Task status workflow
 - Task assignment (team member picker)
 - Task reminders / notifications
-- Migrate `tasks` slice → TanStack Query
+- Implement on TanStack Query + Zustand baseline (behavior reference: legacy `tasks` slice)
 - a11y pass + Zod schemas + tests
 
 ---
@@ -672,7 +650,7 @@ Cross-cutting:
 - Bulk actions: tag, assign, move stage, delete
 - Filter context (saved filters, chips)
 - Tag autosuggest integration (canonical from Molecules)
-- Migrate `prospect` slice → TanStack Query
+- Implement on TanStack Query + Zustand baseline (behavior reference: legacy `prospect` slice)
 - a11y + Zod + tests
 
 ---
@@ -689,7 +667,7 @@ Cross-cutting:
 - CSV enrichment — status (`/v2/leads/csv-enrichment/status`)
 - Lead-to-prospect conversion flow
 - Lead enrichment API integration
-- Migrate `leads` + `leadFinderV2` + `csvEnrichment` slices → TanStack Query
+- Implement on TanStack Query + Zustand baseline (behavior reference: legacy `leads` + `leadFinderV2` + `csvEnrichment` slices)
 - File uploader integration (from Molecules)
 - a11y + Zod + tests
 
@@ -711,7 +689,7 @@ Cross-cutting:
 - Domain setup flow
 - Inframail IPs (`/inframail-ips`)
 - Email verifier
-- Migrate `emailAccount` + `domains` + `inframailIps` + `emailVerifier` slices → TanStack Query
+- Implement on TanStack Query + Zustand baseline (behavior reference: legacy `emailAccount` + `domains` + `inframailIps` + `emailVerifier` slices)
 - a11y + Zod + tests
 
 ---
@@ -727,7 +705,7 @@ Cross-cutting:
 - Warmup analytics (charts from Organisms)
 - Warmup schedule / ramp-up controls
 - Warmup status indicators
-- Migrate `emailWarmup` slice → TanStack Query
+- Implement on TanStack Query + Zustand baseline (behavior reference: legacy `emailWarmup` slice)
 - Cross-link with Email Infra (per-account warmup)
 - a11y + Zod + tests
 
@@ -743,7 +721,7 @@ Cross-cutting:
 - Authenticated Inbox Radar dashboard
 - Shareable link generation
 - Report charts (from Organisms)
-- Migrate `inboxRadar` slice → TanStack Query
+- Implement on TanStack Query + Zustand baseline (behavior reference: legacy `inboxRadar` slice)
 - SEO / Helmet wrapper for public report
 - a11y + Zod + tests
 
@@ -764,7 +742,7 @@ Cross-cutting:
 - Twilio Voice SDK integration
 - Call outcomes integration (cross-link with Settings)
 - Realtime call events (WebSocket from App-Shared baseline)
-- Migrate `dialer` slice → TanStack Query
+- Implement on TanStack Query + Zustand baseline (behavior reference: legacy `dialer` slice)
 - a11y + Zod + tests
 
 ---
@@ -784,7 +762,7 @@ Cross-cutting:
 - Subsequence detail
 - Sequence-level activity timeline (Organisms)
 - Sequence score widget integration (Molecules)
-- Migrate `sequence` + `schedule` slices → TanStack Query / Zustand
+- Implement on TanStack Query + Zustand baseline (behavior reference: legacy `sequence` + `schedule` slices)
 - a11y + Zod + tests
 
 ---
@@ -800,7 +778,7 @@ Cross-cutting:
 - Template variables / spintax
 - Template categories
 - Template preview
-- Migrate `templates` slice → TanStack Query
+- Implement on TanStack Query + Zustand baseline (behavior reference: legacy `templates` slice)
 - a11y + Zod + tests
 
 ---
@@ -817,7 +795,7 @@ Cross-cutting:
 - Chart widgets (line/bar/area/donut from Organisms)
 - Per-sequence / per-prospect drilldown
 - Export to CSV
-- Migrate `reports` slice → TanStack Query
+- Implement on TanStack Query + Zustand baseline (behavior reference: legacy `reports` slice)
 - a11y + Zod + tests
 
 ---
@@ -837,7 +815,7 @@ Cross-cutting:
 - Filter chips (canonical filter context)
 - In-app notification center (bell icon — Organisms)
 - Mark-read / mark-unread
-- Migrate `mailboxEmails` + `unifiedInbox` slices → TanStack Query
+- Implement on TanStack Query + Zustand baseline (behavior reference: legacy `mailboxEmails` + `unifiedInbox` slices)
 - a11y + Zod + tests
 
 ---
@@ -852,7 +830,7 @@ Cross-cutting:
 - Feature discovery cards
 - Experiment / promo content
 - CTA routing into setup wizards
-- Migrate `growthHub` slice → TanStack Query
+- Implement on TanStack Query + Zustand baseline (behavior reference: legacy `growthHub` slice)
 - a11y + tests
 
 ---
@@ -868,7 +846,7 @@ Cross-cutting:
 - LinkedIn sequence builder
 - LinkedIn prospect targeting
 - LinkedIn analytics
-- Migrate `linkedInAutomation` slice → TanStack Query
+- Implement on TanStack Query + Zustand baseline (behavior reference: legacy `linkedInAutomation` slice)
 - a11y + Zod + tests
 
 ---
@@ -887,7 +865,7 @@ Cross-cutting:
 - Plan downgrade flow
 - Invoice list / download
 - Plan-block modal (consumed app-wide)
-- Migrate `billingAndSubscription` + `updatePreferredApp` slices → TanStack Query
+- Implement on TanStack Query + Zustand baseline (behavior reference: legacy `billingAndSubscription` + `updatePreferredApp` slices)
 - a11y + Zod + tests
 - Security review (Stripe integration, PCI scope)
 
@@ -906,7 +884,7 @@ Cross-cutting:
 - White-label settings (deep-link from Settings)
 - Agency-level reporting (cross-link with Reports)
 - Agency billing aggregation (cross-link with Billing)
-- Migrate `agencyClient` + `whitelabel` slices → TanStack Query
+- Implement on TanStack Query + Zustand baseline (behavior reference: legacy `agencyClient` + `whitelabel` slices)
 - a11y + Zod + tests
 
 ---
@@ -928,8 +906,9 @@ Foundation / inventory:
 - `rebuild-spec/11-assets.md` → App-Shared, Atoms
 - `rebuild-spec/12-state.md` → App-Shared, every feature project
 - `rebuild-spec/13-type-safety.md` → App-Shared, every feature project
+- `rebuild-spec/14-frontend-principles.md` → every UI project (cross-cutting: rules, anti-patterns, checklist)
 
-Live code reference:
+Legacy code (behavior reference only — rebuild is greenfield, not a port):
 - `src/store/root-reducer.ts:62–119` — 55 registered slices
 - `src/components/app/app.tsx` — top-level switch (auth + public routes)
 - `src/components/home/home.tsx` — authenticated hub (30+ nested routes)
@@ -958,20 +937,28 @@ Iteration 3 candidates:
 - Add estimates (T-shirt or points)
 - Decide cycle / sprint cadence
 
-Open questions (from REBUILD_INVENTORY.md §Open Questions — answer before granular issue creation):
-1. Target router — TanStack vs RR v6/v7?
-2. Styling — SCSS tokens vs Tailwind + shadcn/ui?
-3. State migration scope — full RTKQ collapse vs incremental?
-4. Keep `@saleshandy/design-system` / `@saleshandy/icons` packages?
-5. Form lib — Formik vs RHF + Zod?
-6. Table standardization plan for legacy do-not-contact / sequence / prospect?
-7. Test baseline — greenfield vs characterization?
-8. Build tool — Vite vs Next.js vs Remix?
-9. Observability — add PostHog now or defer?
-10. PWA / SW scope?
-11. Feature flags — which provider?
-12. AI surface — `.claude/` + `.cursor/` both authoritative or consolidate?
-13. Dependency-health + dead-code audits — before or after rebuild plan?
+Open questions (from REBUILD_INVENTORY.md §Open Questions):
+
+Resolved per Frontend Principles alignment:
+1. ✅ Router — **TanStack Router**
+2. ✅ Styling — **Tailwind v4 + shadcn/ui** (Radix primitives, copy-paste)
+3. ~~State migration scope~~ — **N/A, greenfield** (no RTKQ collapse; rewrite features against TanStack Query + Zustand)
+4. ✅ `@saleshandy/design-system` / `@saleshandy/icons` — **drop legacy packages**, build fresh
+5. ✅ Form lib — **RHF + Zod** (no Formik)
+6. ~~Table standardization~~ — **N/A, greenfield** (one canonical TanStack Table v8)
+7. ✅ Test baseline — **Vitest + Playwright + jest-axe + MSW** (greenfield)
+8. ✅ Build tool — **Vite 6**, SPA only (no Next.js, no Remix)
+9. ✅ Observability — **PostHog now**, App-Shared scaffolds it
+11. ✅ Feature flags — **GrowthBook (or LaunchDarkly)**, decision in App-Shared
+13. ~~Dependency-health + dead-code audits~~ — **N/A, greenfield**
+
+Still open:
+10. PWA / service worker scope (offline shell vs push only vs full)
+12. AI surface — consolidate `.claude/` + `.cursor/` or keep both authoritative?
+
+Newly open:
+- A. **Biome vs ESLint + Prettier** — defer to App-Shared scaffolding ticket
+- B. **Renaming vs archive-and-create** for the existing 12 Linear projects (carries through from previous iterations)
 
 ---
 

@@ -17,3 +17,4 @@ Plain lists of what the new version needs. No status tags, no rebuild/reuse mark
 11. [Assets & Media](11-assets.md)
 12. [State](12-state.md)
 13. [Type Safety](13-type-safety.md)
+14. [Frontend Principles](14-frontend-principles.md)
