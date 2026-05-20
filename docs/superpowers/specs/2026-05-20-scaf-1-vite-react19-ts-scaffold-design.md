@@ -1,4 +1,4 @@
-# SCAF-1 — Vite 6 + React 19 + TypeScript-strict scaffold
+# SCAF-1 — Vite 8 + React 19 + TypeScript-strict scaffold
 
 - **Date:** 2026-05-20
 - **Linear issue:** [SAL-1824 · SCAF-1](https://linear.app/ikigaihq/issue/SAL-1824/scaf-1-vite-6-react-19-typescript-strict-scaffold-pnpm)
@@ -18,7 +18,7 @@ those two stay at the root as project documentation.
 
 ## Goal
 
-A greenfield Vite 6 SPA on React 19 with the strictest sensible TypeScript settings,
+A greenfield Vite 8 SPA on React 19 with the strictest sensible TypeScript settings,
 managed by pnpm, that passes `install → typecheck → build → preview` cleanly.
 
 ## Decisions
@@ -34,6 +34,7 @@ Settled during brainstorming:
 | 5 | `@/` path alias defined **once** in tsconfig; Vite reads it via **`vite-tsconfig-paths`** | Single source of truth — no duplicated `resolve.alias`. |
 | 6 | **Strip the template's ESLint** (config + deps) | The project's linter is Biome (SCAF-4); leaving ESLint would be dead, half-configured tooling. |
 | 7 | Replace the template demo (counter + logos) with a **minimal placeholder root** | This is a foundation, not a demo app. |
+| 8 | Scaffold on the template's current **Vite 8 + TypeScript 6** — not the ticket's original "Vite 6 / TS 5.7" | A greenfield rebuild starts on the current toolchain; the ticket text predated these releases. SAL-1824 and these docs updated to match. |
 
 ## Target layout
 
@@ -114,7 +115,7 @@ Owned by later SCAF tickets — deliberately absent from SCAF-1:
 - **pnpm version pin:** corepack activates the pnpm version named in `packageManager`.
   The implementation plan pins a current stable pnpm release; bumping it later is a
   one-line change.
-- **Node version:** local is Node 24.2; Vite 6 + React 19 support it. An `engines`
+- **Node version:** local is Node 24.2; Vite 8 + React 19 support it. An `engines`
   field (`>=22`) documents the floor without hard-failing installs.
 - **`exactOptionalPropertyTypes`** is the strictest of the flags and can surface
   friction in later feature code. It is required by the AC and kept; teams writing
