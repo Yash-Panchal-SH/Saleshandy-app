@@ -43,6 +43,24 @@ must be noted in the PR description and reviewed.
 Redux is not used. `redux`, `@reduxjs/toolkit`, and `react-redux` imports are
 blocked by a Biome `noRestrictedImports` rule.
 
+## Accessibility
+
+Biome's recommended a11y rule set is the automated gate — violations fail
+`pnpm lint`. There is no ESLint/`jsx-a11y` layer and no runtime axe scan in CI
+(both parked). Automated rules catch only a subset, so every PR is expected to:
+
+- use semantic HTML (`<button>`, `<nav>`, `<main>`, headings in order);
+- label every form field (`<label>`, or `aria-label` where no visible label);
+- give every `<img>` a meaningful `alt` (empty `alt=""` for decorative images);
+- keep interactive elements keyboard-reachable and focus-visible;
+- not rely on color alone to convey meaning.
+
+## Logging
+
+Do not call `console.*` in shipped code — Biome's `noConsole` rule blocks it.
+Use the `logger` shim (`src/shared/lib/logger.ts`): `logger.debug/info/warn/error`.
+`debug`/`info` are no-ops outside development; `warn`/`error` always emit.
+
 ## Internationalization
 
 - Strings live in `src/i18n/<locale>/<namespace>.json` (`en`, `fr`; one namespace
