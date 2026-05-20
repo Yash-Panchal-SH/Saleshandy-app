@@ -32,3 +32,13 @@ The following checks run automatically on `git commit` via Husky + lint-staged:
 **This escape hatch is never acceptable on `main` or `develop`.** It exists only for
 emergency situations (e.g. fixing a broken hook itself). Any use on protected branches
 must be noted in the PR description and reviewed.
+
+## State management
+
+- **Server state** → TanStack Query. Never `useEffect`-fetch.
+- **Global UI state** (theme, sidebar, global modals) → Zustand (`src/app/store/`).
+- **Component-local state** → `useState`.
+- **URL state** (filters, sort, pagination, active tab) → TanStack Router search params.
+
+Redux is not used. `redux`, `@reduxjs/toolkit`, and `react-redux` imports are
+blocked by a Biome `noRestrictedImports` rule.

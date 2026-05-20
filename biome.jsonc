@@ -45,6 +45,20 @@
         // accessibility block — it must override any specificity. Disabling globally
         // for CSS; TypeScript/JSX files are unaffected.
         "noImportantStyles": "off"
+      },
+      "style": {
+        // Redux is not used in the rebuild — Zustand owns global UI state.
+        // See CONTRIBUTING.md → State management.
+        "noRestrictedImports": {
+          "level": "error",
+          "options": {
+            "paths": {
+              "redux": "Use Zustand for global UI state — see CONTRIBUTING.md.",
+              "@reduxjs/toolkit": "Use Zustand for global UI state — see CONTRIBUTING.md.",
+              "react-redux": "Use Zustand for global UI state — see CONTRIBUTING.md."
+            }
+          }
+        }
       }
     }
   },
