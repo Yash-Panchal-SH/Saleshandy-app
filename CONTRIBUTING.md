@@ -1,6 +1,30 @@
 # Contributing
 
-> **Note:** This file will be expanded in SCAF-25 with full contribution guidelines.
+How to work in this repository. New to the project? Start with
+[`docs/onboarding.md`](docs/onboarding.md).
+
+## Local development
+
+```bash
+pnpm install        # Node 22+, pnpm via corepack
+pnpm dev            # dev server → http://localhost:5173
+```
+
+Before pushing, run the gates the pre-commit hook enforces:
+
+```bash
+pnpm lint           # Biome lint + format check
+pnpm typecheck      # tsc -b
+pnpm test           # Vitest unit/component tests
+pnpm e2e            # Playwright end-to-end tests
+```
+
+## Branching
+
+- Branch off `main`; name branches `<author>/<ticket>-<slug>`.
+- One logical change per branch; keep them focused and short-lived.
+- `main` is the integration branch and must always be green (lint, typecheck,
+  test, build). No direct commits to `main` for feature work — open a PR.
 
 ## Commit message format
 
