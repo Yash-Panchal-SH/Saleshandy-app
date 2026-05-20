@@ -35,8 +35,8 @@ blue background — proving the chain Vite plugin → CSS tokens → shadcn comp
 | 3 | Tailwind activated via **`@import "tailwindcss"`** in `globals.css` | v4 CSS-first activation — no `tailwind.config.js`, no `@tailwind` directives. |
 | 4 | Dark mode keyed on **`[data-theme="dark"]`** on `<html>` | Matches AC + `03-design-system.md`. shadcn's v4 default `.dark` selector is rewired to `[data-theme="dark"]` via `@custom-variant`. Documented in `docs/adr/0003-theming.md`. |
 | 5 | shadcn/ui initialized via the **shadcn CLI** (`pnpm dlx shadcn@latest init`) | Official path; emits `components.json` + `globals.css` token block + `cn()` util. |
-| 6 | `components.json` `style` = **`new-york`** | Approved by product owner. Baked into every generated component. |
-| 7 | `components.json` `baseColor` = **`slate`** | Cool-tinted neutral that pairs with the blue primary. shadcn default. |
+| 6 | `components.json` `style` = **`radix-nova`** | shadcn CLI v4.7 superseded the classic `new-york`/`default` styles with the Radix/Nova preset; owner approved keeping the CLI's current baseline. |
+| 7 | `components.json` `baseColor` = **`neutral`** | The Nova preset's base (achromatic grays). Atoms Issue #1 redefines the full palette regardless, so the neutral choice is transient. |
 | 8 | UI components live at **`src/shared/components/ui/`**; `cn()` at **`src/shared/lib/utils.ts`** | Matches AC + `LINEAR_IMPORT_PLAN.md` App-Shared entry. |
 | 9 | `clsx` + `tailwind-merge` are **runtime dependencies** | `cn()` composes them at runtime. |
 | 10 | **One sample component: Button** | Proves the chain end to end. The rest arrive in Atoms. `src/shared/components/ui/` otherwise holds only `.gitkeep`. |
