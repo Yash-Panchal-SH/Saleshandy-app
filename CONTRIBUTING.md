@@ -42,3 +42,14 @@ must be noted in the PR description and reviewed.
 
 Redux is not used. `redux`, `@reduxjs/toolkit`, and `react-redux` imports are
 blocked by a Biome `noRestrictedImports` rule.
+
+## Internationalization
+
+- Strings live in `src/i18n/<locale>/<namespace>.json` (`en`, `fr`; one namespace
+  per feature, seeded with `common`).
+- Use `useTranslation('<namespace>')`. `en` is the source of truth for the key
+  set — unknown keys fail typecheck via `src/i18n/i18next.d.ts`.
+- `pnpm i18n:check` extracts keys and reports gaps. It is **warn-only** — it
+  always exits 0, even when `fr` keys are missing, and CI does not gate on it.
+  This is intentional while `fr` coverage catches up to `en`; flipping it to
+  hard-fail is a follow-up ticket.
