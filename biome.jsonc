@@ -12,7 +12,8 @@
       "!!**/node_modules",
       "!!**/coverage",
       "!!**/test-results",
-      "!!**/playwright-report"
+      "!!**/playwright-report",
+      "!src/routeTree.gen.ts"
     ]
   },
   "formatter": {

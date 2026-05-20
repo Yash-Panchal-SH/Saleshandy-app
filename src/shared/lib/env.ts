@@ -7,6 +7,8 @@ import { z } from 'zod'
  * declaration in `src/vite-env.d.ts`. Nothing else in the app changes.
  */
 const envSchema = z.object({
+  // Base URL for all API calls. Relative ("/api") in dev; absolute per environment.
+  VITE_API_BASE_URL: z.string().min(1).default('/api'),
   VITE_APP_ENV: z.enum(['development', 'staging', 'production']),
   // Reserved for SCAF-21 (PWA). Env values are strings — map "true"/"false" → boolean.
   VITE_PWA_ENABLED: z

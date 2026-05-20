@@ -6,6 +6,10 @@ export default defineConfig({
   plugins: [react(), tsconfigPaths({ projects: ['tsconfig.app.json'] })],
   test: {
     environment: 'jsdom',
+    env: {
+      VITE_APP_ENV: 'development',
+      VITE_API_BASE_URL: '/api',
+    },
     globals: true,
     setupFiles: ['src/test/setup.ts'],
     include: ['src/**/*.test.{ts,tsx}'],
