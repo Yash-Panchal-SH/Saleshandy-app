@@ -2,6 +2,7 @@ import i18n from 'i18next'
 import LanguageDetector from 'i18next-browser-languagedetector'
 import { initReactI18next } from 'react-i18next'
 import { env } from '@/shared/lib/env'
+import { logger } from '@/shared/lib/logger'
 import enCommon from './en/common.json'
 import frCommon from './fr/common.json'
 
@@ -37,7 +38,7 @@ export const i18nReady = i18n
     // Missing keys: dev logs a warning; prod silently renders the raw key.
     saveMissing: isDev,
     missingKeyHandler: (_lngs, ns, key) => {
-      if (isDev) console.warn(`[i18n] missing key: ${ns}:${key}`)
+      if (isDev) logger.warn(`[i18n] missing key: ${ns}:${key}`)
     },
   })
 

@@ -31,9 +31,16 @@
         "noUnusedImports": "error"
       },
       "suspicious": {
-        "noExplicitAny": "error"
+        "noExplicitAny": "error",
+        // Raw `console` is forbidden in shipped code — use the `logger` shim
+        // (src/shared/lib/logger.ts). Excepted in `overrides` below: logger.ts
+        // itself, env.ts bootstrap, and test files. Per SCAF-17.
+        "noConsole": "error"
       },
       "a11y": {
+        // Biome's recommended a11y rule set is the project's a11y gate (SCAF-18).
+        // No ESLint / jsx-a11y layered on; known coverage gaps are accepted (ADR 0001).
+        "recommended": true,
         // shadcn/ui Button uses `asChild` to render arbitrary elements (e.g. <a>);
         // the underlying Slot renders whatever element the consumer passes, so
         // useButtonType would be a false-positive for all `asChild` usages.
@@ -62,6 +69,21 @@
       }
     }
   },
+  "overrides": [
+    {
+      // `noConsole` exceptions: the logger shim wraps console by design;
+      // env.ts is bootstrap code that runs before the logger; test files
+      // are not shipped code.
+      "includes": [
+        "src/shared/lib/logger.ts",
+        "src/shared/lib/env.ts",
+        "**/*.test.ts",
+        "**/*.test.tsx",
+        "src/test/**"
+      ],
+      "linter": { "rules": { "suspicious": { "noConsole": "off" } } }
+    }
+  ],
   "javascript": {
     "formatter": {
       "quoteStyle": "single",
