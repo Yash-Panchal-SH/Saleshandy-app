@@ -12,7 +12,9 @@
     "build": "tsc -b && vite build --mode production",
     "build:staging": "tsc -b && vite build --mode staging",
     "typecheck": "tsc -b",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "biome check .",
+    "format": "biome format --write ."
   },
   "dependencies": {
     "@fontsource-variable/geist": "^5.2.9",
@@ -30,6 +32,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.4.15",
     "@types/node": "^24.12.3",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
